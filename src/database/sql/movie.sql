@@ -1,0 +1,5 @@
+DROP TABLE IF EXISTS movies;
+CREATE TABLE movies (
+    movie_id BIGSERIAL PRIMARY KEY,
+    title VARCHAR
+)

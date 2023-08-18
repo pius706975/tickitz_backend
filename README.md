@@ -83,3 +83,9 @@ Start the server
 
     npm run dev
 ```
+
+##
+## Postman documentation
+``` bash
+    https://documenter.getpostman.com/view/26304983/2s9Y5SW5i7
+```

@@ -4,7 +4,7 @@ const {authentication, isAdmin} = require('../../middleware/auth.middleware')
 const ctrl = require('../schedule/schedule.controller')
 
 scheduleRouters.get('/', ctrl.getAllSchedule)
-scheduleRouters.get('/:cinema_name', ctrl.getScheduleByName)
+scheduleRouters.get('/search', ctrl.getScheduleByName)
 
 scheduleRouters.post('/add', authentication, isAdmin, ctrl.addSchedule)
 

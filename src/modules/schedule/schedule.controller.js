@@ -107,7 +107,7 @@ ctrl.getAllSchedule = async (req, res)=>{
 ctrl.getScheduleByName = async (req, res)=>{
 
     try {
-        const result = await models.getScheduleByName({cinema_name: req.params.cinema_name})
+        const result = await models.getScheduleByName({cinema_name: req.query.cinema_name})
 
         return response(res, 200, result)
     } catch (error) {

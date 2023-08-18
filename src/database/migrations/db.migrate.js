@@ -78,7 +78,7 @@ module.exports = {
 
         await queryInterface.sequelize.query(`
             CREATE TABLE booking (
-                bookng_id BIGSERIAL PRIMARY KEY,
+                booking_id BIGSERIAL PRIMARY KEY,
                 seat INT [] NOT NULL,
                 booking_date TIMESTAMP NOT NULL,
                 total INT DEFAULT 0,

@@ -1,4 +1,4 @@
-const db = require('../../database/config')
+const db = require('../../database/config/config')
 const models = {}
 
 models.addCinema = ({cinema_name, cinema_location})=>{

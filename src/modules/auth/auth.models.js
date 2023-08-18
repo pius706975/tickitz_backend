@@ -1,5 +1,5 @@
 const models = {}
-const db = require('../../database/config')
+const db = require('../../database/config/config')
 
 models.register = ({username, email, password, image, is_verified, token_verify,})=>{
     

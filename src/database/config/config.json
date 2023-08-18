@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "piuspius",
+    "password": "piuspius",
+    "database": "tickitz_js",
+    "host": "localhost",
+    "dialect": "postgres"
+  },
+  "test": {
+    "username": "piuspius",
+    "password": "piuspius",
+    "database": "tickitz_js",
+    "host": "localhost",
+    "dialect": "postgres"
+  },
+  "production": {
+    "username": "piuspius",
+    "password": "piuspius",
+    "database": "tickitz_js",
+    "host": "localhost",
+    "dialect": "postgres"
+  }
+}

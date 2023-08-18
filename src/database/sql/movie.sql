@@ -8,7 +8,7 @@ CREATE TABLE movies (
     casts VARCHAR,
     genre VARCHAR,
     synopsis VARCHAR,
-    image VARCHAR,
+    images VARCHAR,
     user_id INT, 
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP,

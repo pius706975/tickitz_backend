@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"This is movie backend\"",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "migrate:up": "npx sequelize-cli db:migrate --config src/database/config/config.json --migrations-path src/database/migrations",
+    "migrate:down": "npx sequelize-cli db:migrate:undo:all --config src/database/config/config.json --migrations-path src/database/migrations",
+    "test": "echo \"This is movie backend\""
   },
   "author": "pius",
   "license": "ISC",
@@ -25,7 +27,8 @@
     "path": "^0.12.7",
     "pg": "^8.10.0",
     "require": "^2.4.20",
-    "sequelize": "^6.30.0",
+    "sequelize": "^6.32.1",
+    "sequelize-cli": "^6.6.1",
     "validator": "^13.9.0"
   }
 }

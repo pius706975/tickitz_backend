@@ -1,4 +1,4 @@
-const db = require('../../database/config')
+const db = require('../../database/config/config')
 const models = {}
 
 models.addMovie = ({title, release_date, directed_by, duration, casts, genre, synopsis, image, user_id})=>{

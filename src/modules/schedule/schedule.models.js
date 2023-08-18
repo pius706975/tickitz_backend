@@ -1,4 +1,4 @@
-const db = require('../../database/config')
+const db = require('../../database/config/config')
 const models = {}
 
 models.addSchedule = ({start_date, end_date, cinema_id, movie_id, user_id, price})=>{

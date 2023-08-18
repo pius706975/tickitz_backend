@@ -1,34 +1,50 @@
 const ctrl = {}
+const multer = require('multer')
 const response = require('../../libs/response')
 const models = require('../user/user.model')
-const fs = require('fs')
+const formData = multer().none()
+const uploadFile = require('../../middleware/upload/cloudinary')
+const bcrypt = require('bcrypt')
 
 ctrl.updateProfile = async (req, res)=>{
-
     try {
-        const user = req.userData
-        const userProfile = await models.getUserProfile({user_id: user.user_id})
+        formData(req, res, async (err)=>{
+            if (err) {
+                return response(res, 500, err)
+            }
 
-        const image = req.file ? req.file.filename : userProfile[0].image
+            const user = req.userData
+            const userProfile = await models.getUserProfile({user_id: user.user_id})
+    
+            const queries = {
+                email: user.email, //email doesn't need to be changed to keep data secure
+                username: req.body.username ? req.body.username : 'user'
+            }
 
-        if (req.file && userProfile[0].image !== 'image-default.jpeg') {
-            fs.unlinkSync(`./public/${userProfile[0].image}`)
-        }
- 
-        const queries = {
-            image: req.file ? image : null,
-            email: user.email,
-            username: req.body.username ? req.body.username : null
-        }
+            const profile = await models.updateProfile(queries)
 
-        const profile = await models.updateProfile(queries)
-
-        const imageLink = `${process.env.BASE_URL}/public/${profile[0].image}`
-
-        return response(res, 200, {profile, image: imageLink})
+            return response(res, 200, {message: 'Profile updated', result: profile})
+        })
     } catch (error) {
-        console.log(error);
+        console.log(error)
         return response(res, 500, error) 
+    }
+}
+
+ctrl.updateProfilePicture = async (req, res)=>{
+    try {
+        const result = await uploadFile(req.file.path, 'movieTickitz/userImages')
+        const email = req.userData.email
+        const image = result.secure_url
+        const updatedData = await models.updateProfilePicture({image, email})
+
+        return response(res, 200, {
+            message: 'Profile picture updated',
+            data: updatedData
+        })
+    } catch (error) {
+        console.log(error)
+        return response(res, 500, error)
     }
 }
 
@@ -48,10 +64,8 @@ ctrl.getUserProfile = async (req, res)=>{
     try {
         const user = req.userData
         const userProfile = await models.getUserProfile({user_id: user.user_id})
-        
-        const imageLink = `${process.env.BASE_URL}/public/${userProfile[0].image}`
 
-        return response(res, 200, {userProfile, image: imageLink})
+        return response(res, 200, userProfile)
     } catch (error) {
         return response(res, 500, error)
     }

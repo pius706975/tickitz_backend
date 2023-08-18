@@ -4,11 +4,25 @@ const models = {}
 models.addMovie = ({title, release_date, directed_by, duration, casts, genre, synopsis, image, user_id})=>{
 
     return new Promise((resolve, reject)=>{
-        db.query('INSERT INTO movies (title, release_date, directed_by, duration, casts, genre, synopsis, image, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *;', [title, release_date, directed_by, duration, casts, genre, synopsis, image, user_id])
+        db.query(`
+            SELECT * FROM movies
+            WHERE title ILIKE $1`,
+            [`%${title}%`])
         .then((res)=>{
-            resolve(res.rows)
-        }).catch((err)=>{
-            reject(err)
+            if (res.rowCount > 0) {
+                reject(new Error('Movie already exists'))
+            } else {
+                db.query(`
+                    INSERT INTO movies (title, release_date, directed_by, duration, casts, genre, synopsis, image, user_id) 
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+                    RETURNING *`, 
+                    [title, release_date, directed_by, duration, casts, genre, synopsis, image, user_id])
+                .then((res)=>{
+                    resolve(res.rows)
+                }).catch((err)=>{
+                    reject(err)
+                })
+            }
         })
     })
 }

@@ -1,4 +1,4 @@
-const response = require('./responses')
+const response = require('./response')
 const mailer = require('nodemailer')
 require('dotenv').config()
 
@@ -43,7 +43,7 @@ const sendEmail = async (email, subject, link)=>{
                             }
                 
                             .email-title {
-                                color: #007bff;
+                                color: #7B00FF;
                                 margin-bottom: 10px;
                             }
                 

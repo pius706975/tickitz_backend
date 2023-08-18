@@ -12,9 +12,11 @@ module.exports = {
                 image VARCHAR,
                 role INTEGER DEFAULT 0,
                 is_verified BOOLEAN DEFAULT FALSE,
+                refresh_token VARCHAR,
                 token_verify VARCHAR,
-                created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-                updated_at TIMESTAMP
+                token_expire TIMESTAMP,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
             )
         `)
 
@@ -30,8 +32,8 @@ module.exports = {
                 synopsis VARCHAR,
                 image VARCHAR,
                 user_id INT, 
-                created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-                updated_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW(),
                 CONSTRAINT fk_users 
                     FOREIGN KEY (user_id) 
                     REFERENCES users(user_id)
@@ -44,7 +46,7 @@ module.exports = {
                 cinema_name VARCHAR NOT NULL,
                 cinema_location VARCHAR NOT NULL,
                 created_at TIMESTAMP DEFAULT NOW(),
-                updated_at TIMESTAMP
+                updated_at TIMESTAMP DEFAULT NOW()
             )
         `)
 
@@ -57,8 +59,8 @@ module.exports = {
                 movie_id INT, 
                 user_id INT,
                 price INT DEFAULT 0,
-                created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-                updated_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW(),
                 CONSTRAINT fk_cinema 
                     FOREIGN KEY(cinema_id) 
                     REFERENCES cinema(cinema_id)
@@ -82,8 +84,8 @@ module.exports = {
                 total INT DEFAULT 0,
                 schedule_id INT,
                 user_id INT,
-                created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-                updated_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW(),
                 CONSTRAINT fk_schedule 
                     FOREIGN KEY(schedule_id) 
                     REFERENCES schedules(schedule_id)

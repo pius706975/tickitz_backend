@@ -1,50 +1,51 @@
+const multer = require('multer')
 const response = require('../../libs/response')
 const models = require('../movie/movie.models')
-const fs = require('fs')
+const formData = multer().none()
+const uploadFile = require('../../middleware/upload/cloudinary')
 const ctrl = {}
 
 ctrl.addMovie = async (req, res)=>{
 
     try {
-        const userLogin = req.userData
-        
-        if (!userLogin) {
-            return response(res, 401, 'You need to login first')
-        }
+        formData(req, res, async (err)=>{
+            if (err) {
+                return response(res, 500, err)
+            }
 
-        const image = req.file ? req.file.filename : 'image-default.jpeg'
-        const user = req.userData
-        const queries = {
-            title: req.body.title,
-            release_date: req.body.release_date,
-            directed_by: req.body.directed_by,
-            duration: req.body.duration,
-            casts: req.body.casts,
-            genre: req.body.genre,
-            synopsis: req.body.synopsis,
-            image: image,
-            user_id: user.user_id
-        }
+            const user = req.userData
+            if (!user) {
+                return response(res, 401, 'You need to login first')
+            }
 
-        const movieExists = await models.movieExists(queries)
+            const queries = {
+                title: req.body.title,
+                release_date: req.body.release_date,
+                directed_by: req.body.directed_by,
+                duration: req.body.duration,
+                casts: req.body.casts,
+                genre: req.body.genre,
+                synopsis: req.body.synopsis,
+                image: req.body.image ? req.body.image : process.env.DEFAULT_MOVIE_IMAGE,
+                user_id: user.user_id
+            }
 
-        if (!req.body.title) {
-            if (image !== 'image-default.jpeg') fs.unlinkSync(`public/${image}`)
-            return response(res, 400, 'Title cannot be empty')
-        } else if (!req.body.release_date) {
-            if (image !== 'image-default.jpeg') fs.unlinkSync(`public/${image}`)
-            return response(res, 400, 'Release date cannot be empty')
-        } else if (!req.body.directed_by) {
-            if (image !== 'image-default.jpeg') fs.unlinkSync(`public/${image}`)
-            return response(res, 400, 'Directed by cannot be empty')
-        } else if (movieExists.length >= 1) {
-            if (image !== 'image-default.jpeg') fs.unlinkSync(`public/${image}`)
-            return response(res, 400, 'Movie already exists')
-        }
+            const movieExists = await models.movieExists(queries)
 
-        const result = await models.addMovie(queries)
+            if (!req.body.title) {
+                return response(res, 400, 'Title cannot be empty')
+            } else if (!req.body.release_date) {
+                return response(res, 400, 'Release date cannot be empty')
+            } else if (!req.body.directed_by) {
+                return response(res, 400, 'Directed by cannot be empty')
+            } else if (movieExists.length >= 1) {
+                return response(res, 400, 'Movie already exists')
+            }
 
-        return response(res, 200, result)
+            const result = await models.addMovie(queries)
+
+            return response(res, 200, result)
+        })
     } catch (error) {
         return response(res, 500, error)
     }

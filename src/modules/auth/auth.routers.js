@@ -6,6 +6,9 @@ const upload = require('../../middleware/upload.middleware')
 
 authRouters.post('/register', ctrl.register)
 authRouters.post('/login', ctrl.login)
+
 authRouters.get('/confirm', ctrl.verifyEmail)
+authRouters.get('/resend', ctrl.resendVerification)
+
 
 module.exports = authRouters

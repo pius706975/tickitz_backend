@@ -3,27 +3,39 @@ const models = require('./auth.models')
 const response = require('../../libs/response')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const fs = require('fs')
 const sendEmail = require('../../libs/mailer')
 const crypto = require('crypto')
 const validator = require('validator')
 
 ctrl.register = async (req, res)=>{
     try {
+        const isPasswordValid = (password)=>{
+            const lengthRegex = /.{8,}/
+            const uppercaseRegex = /[A-Z]/
+            const symbolRegex = /[\W_]/
+            const numberRegex = /\d/
+
+            const hasLength = lengthRegex.test(password)
+            const hasUppercase = uppercaseRegex.test(password)
+            const hasSymbol = symbolRegex.test(password)
+            const hasNumber = numberRegex.test(password)
+
+            return hasLength && hasUppercase && hasSymbol && hasNumber
+        }
+
         const saltRounds = 10
         const hashPass = await bcrypt.hashSync(req.body.password, saltRounds)
         const tokenVerify = await crypto.randomBytes(16).toString('hex')
+        const expiredToken = new Date(Date.now() + 20000 * 60)
         const emailExist = await models.login({email: req.body.email})
-        const image = req.file ? req.file.filename : 'image-default.jpeg'
 
         if (!req.body.email || !req.body.password) {
-            if (image !== 'image-default.jpeg') fs.unlinkSync(`public/${image}`)
             return response(res, 401, {message: 'email or password cannot be empty'})
-        }else if (!validator.isEmail(req.body.email)) {
-            if (image !== 'image-default.jpeg') fs.unlinkSync(`public/${image}`)
-            return response(res, 400, {message: 'email is invalid'})
+        } else if (!isPasswordValid(req.body.password)) {
+            return response(res, 400, {message: 'Password must contain at least 8 characters, 1 uppercase letter, 1 symbol, and 1 number'})
+        } else if (!validator.isEmail(req.body.email)) {
+            return response(res, 400, {message: 'Email format is invalid'})
         }else if (emailExist.length > 0) {
-            if (image !== 'image-default.jpeg') fs.unlinkSync(`public/${image}`)
             return response(res, 400, {message: 'email already exists'})
         }
 
@@ -31,17 +43,25 @@ ctrl.register = async (req, res)=>{
             username: req.body.username,
             email: req.body.email,
             password: hashPass,
-            image: image,
+            image: req.body.image ? req.body.image : process.env.DEFAULT_PICTURE,
             role: req.body.role ? req.body.role : 0,
             token_verify: tokenVerify,
+            token_expire: expiredToken,
             is_verified: false, 
         }
 
         const confirmLink = `${process.env.BASE_URL}/auth/confirm?token=${tokenVerify}`
-        const resendConfirm = `${process.env.BASE_URL}/auth/resend/username=${queries.username}`
-        await sendEmail(queries.email, 'Email verification\n', confirmLink)
+        const resendConfirm = `${process.env.BASE_URL}/auth/resend?email=${queries.email}`
+
+        await sendEmail(queries.email, 'Email verification\n', confirmLink) 
+        
         const result = await models.register(queries)
-        return response(res, 200, {users: result, status: 'Verify email resent', resend: resendConfirm})
+
+        return response(res, 200, {
+            users: result,
+            status: 'Check your email! We have sent you a confirmation link.',
+            resend: resendConfirm
+        })
     } catch (error) {
         console.log(error); 
         return response(res, 500, error)
@@ -107,6 +127,42 @@ ctrl.verifyEmail = async (req, res)=>{
     }
 }
 
+ctrl.resendVerification = async (req, res)=>{
+    try {
+        const email = {email: req.query.email}
+        const checkUser = await models.login(email)
+        const user = checkUser[0]
+
+        if (checkUser.length <= 0) {
+            return response(res, 401, {message: 'Resend verification failed'})
+        } else if (user.is_verified === true) {
+            return response(res, 401, {message: 'Email has been verified'})
+        }
+
+        const token_verify = await crypto.randomBytes(16).toString('hex')
+        const expiredAt = new Date(Date.now() + 20000 * 60)
+
+        const queries = {
+            token_verify: token_verify,
+            token_expire: expiredAt,
+            email: req.query.email
+        }
+
+        const confirmLink = `${process.env.BASE_URL}/auth/confirm?token=${token_verify}`
+
+        await sendEmail(queries.email, 'Email verification\n', confirmLink) 
+
+        const result = await models.resendVerification(queries)
+
+        return response(res, 200, {
+            user: result,
+            message: 'Confirmation link is resent'
+        })
+    } catch (error) {
+        console.log(error)
+        return response(res, 500, error)
+    }
+}
 
 
 module.exports = ctrl

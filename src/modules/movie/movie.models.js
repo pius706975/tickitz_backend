@@ -27,35 +27,43 @@ models.addMovie = ({title, release_date, directed_by, duration, casts, genre, sy
     })
 }
 
-models.updateMovie = ({movie_id, title, release_date, directed_by, duration, casts, genre, synopsis, image, user_id})=>{
+models.updateMovie = ({title, release_date, directed_by, duration, casts, genre, synopsis, user_id, movie_id})=>{
 
     return new Promise((resolve, reject)=>{
-        db.query('SELECT * FROM movies WHERE movie_id=$1', [movie_id])
+        db.query(`
+            UPDATE movies
+            SET title = COALESCE($1, title), 
+                release_date = COALESCE($2, release_date), 
+                directed_by = COALESCE($3, directed_by), 
+                duration = COALESCE($4, duration), 
+                casts = COALESCE($5, casts), 
+                genre = COALESCE($6, genre), 
+                synopsis = COALESCE($7, synopsis), 
+                user_id = COALESCE($8, user_id)
+            WHERE movie_id = $9
+            RETURNING *`, 
+            [title, release_date, directed_by, duration, casts, genre, synopsis, user_id, movie_id])
         .then((res)=>{
-            const movie = res.rows[0]
+            resolve(res.rows)
+        }).catch((err)=>{
+            reject(err)
+        })
+    })
+}
 
-            if (!movie) {
-                reject(new Error('Movie not found'))
-            }else {
-                const mTitle = title ? title : movie.title
-                const releaseDate = release_date ? release_date : movie.release_date
-                const directedBY = directed_by ? directed_by : movie.directed_by
-                const mDuration = duration ? duration : movie.duration
-                const mCasts = casts ? casts : movie.casts
-                const mGenre = genre ? genre : movie.genre
-                const mSynopsis = synopsis ? synopsis : movie.synopsis
-                const mImage = image ? image : movie.image
-                const userID = user_id ? user_id : movie.user_id
-                
-                const query = 'UPDATE movies SET title=$1, release_date=$2, directed_by=$3, duration=$4, casts=$5, genre=$6, synopsis=$7, image=$8, user_id=$9, updated_at=now() WHERE movie_id=$10 RETURNING *'
+models.updateMoviePicture = ({image, movie_id})=>{
 
-                db.query(query, [mTitle, releaseDate, directedBY, mDuration, mCasts, mGenre, mSynopsis, mImage, userID, movie_id])
-                .then((res)=>{
-                    resolve(res.rows[0])
-                }).catch((err)=>{
-                    reject(err)
-                })
-            }
+    return new Promise((resolve, reject)=>{
+        db.query(`
+            UPDATE movies
+            SET image = COALESCE($1, image)
+            WHERE movie_id = $2
+            RETURNING *`,
+            [image, movie_id])
+        .then((res)=>{
+            resolve(res.rows)
+        }).catch((err)=>{
+            reject(err)
         })
     })
 }
@@ -63,18 +71,14 @@ models.updateMovie = ({movie_id, title, release_date, directed_by, duration, cas
 models.deleteMovie = ({movie_id})=>{
 
     return new Promise((resolve, reject)=>{
-        db.query('DELETE FROM movies WHERE movie_id=$1;', [movie_id])
+        db.query(`
+            DELETE FROM movies 
+            WHERE movie_id = $1`, 
+            [movie_id])
         .then((res)=>{
-            if (res.rowCount == 0) {
-                reject(new Error('Movie not found'))
-            }else {
-                db.query('DELETE FROM movies WHERE movie_id=$1', [movie_id])
-                .then((res)=>{
-                    resolve(res.rows)
-                }).catch((err)=>{
-                    reject(err)
-                })
-            }
+            resolve(res.rows)
+        }).catch((err)=>{
+            reject(err)
         })
     })
 }
@@ -94,7 +98,28 @@ models.movieExists = ({title})=>{
 models.getAllMovie = ({limit, offset})=>{
 
     return new Promise((resolve, reject)=>{
-        db.query(`SELECT * FROM movies ORDER BY release_date DESC LIMIT ${limit} OFFSET ${offset}`)
+        db.query(`
+            SELECT * FROM movies 
+            ORDER BY release_date DESC 
+            LIMIT $1 OFFSET $2`,
+            [limit, offset])
+        .then((res)=>{
+            resolve(res.rows)
+        }).catch((err)=>{
+            reject(err)
+        })
+    })
+}
+
+models.getMovieByTitle = ({title, limit, offset})=>{
+
+    return new Promise((resolve, reject)=>{
+        db.query(`
+            SELECT * FROM movies 
+            WHERE title ILIKE $1 
+            ORDER BY title ASC
+            LIMIT $2 OFFSET $3`, 
+            [`%${title}%`, limit, offset])
         .then((res)=>{
             resolve(res.rows)
         }).catch((err)=>{
@@ -106,7 +131,10 @@ models.getAllMovie = ({limit, offset})=>{
 models.getMovieByID = ({movie_id})=>{
 
     return new Promise((resolve, reject)=>{
-        db.query('SELECT * FROM movies WHERE movie_id=$1;', [movie_id])
+        db.query(`
+            SELECT * FROM movies 
+            WHERE movie_id=$1`, 
+            [movie_id])
         .then((res)=>{
             resolve(res.rows)
         }).catch((err)=>{
@@ -115,23 +143,15 @@ models.getMovieByID = ({movie_id})=>{
     })
 }
 
-models.getMovieByTitle = ({limit, offset}, title)=>{
+models.getTotalMovies = ()=>{
 
     return new Promise((resolve, reject)=>{
-        let query = 'SELECT * FROM movies WHERE title ILIKE $1 ORDER BY title '
-
-        db.query(query, [`%${title}%`])
+        db.query(`
+            SELECT COUNT(*) FROM movies`)
         .then((res)=>{
-            if (res.rowCount == 0) {
-                reject(new Error('Movie not found'))
-            } else {
-                db.query(query + `LIMIT ${limit} OFFSET ${offset};`, [`%${title}%`])
-                .then((res)=>{
-                    resolve(res.rows)
-                }).catch((err)=>{
-                    reject(err)
-                })
-            }
+            resolve(res.rows[0].count)
+        }).catch((err)=>{
+            reject(err)
         })
     })
 }
